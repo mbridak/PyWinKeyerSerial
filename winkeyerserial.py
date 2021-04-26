@@ -16,6 +16,10 @@ class winkeyer(QtWidgets.QMainWindow):
         uic.loadUi(self.relpath("main.ui"), self)
         self.sendmsg1_button.clicked.connect(self.sendmsg1)
         self.sendmsg2_button.clicked.connect(self.sendmsg2)
+        self.sendmsg3_button.clicked.connect(self.sendmsg3)
+        self.sendmsg4_button.clicked.connect(self.sendmsg4)
+        self.sendmsg5_button.clicked.connect(self.sendmsg5)
+        self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handleTextChange)
         self.port = serial.Serial(self.device, 1200, timeout=1)
         self.port.setDTR(True)
@@ -83,6 +87,26 @@ class winkeyer(QtWidgets.QMainWindow):
     def sendmsg2(self):
         print("sending2")
         message=self.msg2.text()
+        self.port.write(message.upper().encode())
+
+    def sendmsg3(self):
+        print("sending3")
+        message=self.msg3.text()
+        self.port.write(message.upper().encode())
+
+    def sendmsg4(self):
+        print("sending4")
+        message=self.msg4.text()
+        self.port.write(message.upper().encode())
+
+    def sendmsg5(self):
+        print("sending5")
+        message=self.msg5.text()
+        self.port.write(message.upper().encode())
+
+    def sendmsg6(self):
+        print("sending6")
+        message=self.msg6.text()
         self.port.write(message.upper().encode())
 
     def handleTextChange(self):
