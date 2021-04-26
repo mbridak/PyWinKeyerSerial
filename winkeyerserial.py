@@ -8,7 +8,7 @@ from PyQt5 import uic
 
 class winkeyer(QtWidgets.QMainWindow):
     version = 0
-    device = '/dev/ttyUSB0'
+    device = '/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0'
     oldtext = ''
 
     def __init__(self, *args, **kwargs):
@@ -74,10 +74,14 @@ class winkeyer(QtWidgets.QMainWindow):
         self.port.write(command)
 
     def sendmsg1(self):
-        command = b'\x00\x0e\x01'
-        self.port.write(command)
+        print("sending1")
+        #command = b'\x00\x0e\x01'
+        #self.port.write(command)
+        message=self.msg1.text()
+        self.port.write(message.upper().encode())
 
     def sendmsg2(self):
+        print("sending2")
         message=self.msg2.text()
         self.port.write(message.upper().encode())
 
