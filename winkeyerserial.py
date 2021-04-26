@@ -7,9 +7,16 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5 import uic
 
 class winkeyer(QtWidgets.QMainWindow):
+    """
+    The device below will need to be changed to your serial device id.
+    I built the winkeyer serial kit and supplied my own serial device.
+
+    I have a winkeyer usb on order. Will be curious to see what device they use.
+    """
     version = 0
     device = '/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0'
     oldtext = ''
+    port = ''
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -21,10 +28,6 @@ class winkeyer(QtWidgets.QMainWindow):
         self.sendmsg5_button.clicked.connect(self.sendmsg5)
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handleTextChange)
-        self.port = serial.Serial(self.device, 1200, timeout=1)
-        self.port.setDTR(True)
-        self.port.setRTS(False)
-        self.host_open()
 
     def relpath(self, filename):
         """
@@ -37,7 +40,21 @@ class winkeyer(QtWidgets.QMainWindow):
             base_path = os.path.abspath(".")
         return os.path.join(base_path, filename)
 
+    def host_init(self):
+        try:
+            self.port = serial.Serial(self.device, 1200, timeout=1)
+        except:
+            self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
+            self.port = False
+            return
+        self.port.setDTR(True)
+        self.port.setRTS(False)
+        self.host_open()
+
     def host_open(self):
+        """
+        Sends the open command to winkeyer so it will start listening to us.
+        """
         self.host_close()
         time.sleep(1)
         command = b'\x00\x02'
@@ -49,67 +66,88 @@ class winkeyer(QtWidgets.QMainWindow):
         self.port.write(command)
 
     def setspeed(self, speed):
+        """
+        Sets winkeyer speed. I believe valid speeds are from 5 to brainmelt
+        """
         command=chr(2)+chr(speed)
         print(command.encode())
         self.port.write(command.encode())
 
     def setmode(self):
+        """
+        Basically tells the device 'Hey, well be expecting you to transform letters into boop-ity boop stuff.'
+        """
         command = b'\x0e\x44'
         self.port.write(command)
 
     def sendblended(self, msg):
+        """
+        a way to glue togetther two characters to send a prosign.
+        """
         command = b'\x1b'+msg.upper().encode()
         self.port.write(command)
 
     def send(self, msg):
+        """
+        Basic string in, Morse out of the device.
+        """
         command = msg.upper().encode()
         self.port.write(command)
 
     def sendBackspace(self):
+        """
+        Erases a character from the end of the winkeyer buffer if it has not been sent already.
+        """
         command = b'\x08'
         self.port.write(command)
 
     def tuneon(self):
+        """
+        Keydown and hold it.
+        """
         command = b'\x0b\x01'
         self.port.write(command)
 
     def tuneoff(self):
+        """
+        Stop the keydown
+        """
         command = b'\x0b\x00'
         self.port.write(command)
 
     def sendmsg1(self):
-        print("sending1")
-        #command = b'\x00\x0e\x01'
-        #self.port.write(command)
+        """
+        This and the following just pull text from the fields next to the button and sends it.
+        """
         message=self.msg1.text()
         self.port.write(message.upper().encode())
 
     def sendmsg2(self):
-        print("sending2")
         message=self.msg2.text()
         self.port.write(message.upper().encode())
 
     def sendmsg3(self):
-        print("sending3")
         message=self.msg3.text()
         self.port.write(message.upper().encode())
 
     def sendmsg4(self):
-        print("sending4")
         message=self.msg4.text()
         self.port.write(message.upper().encode())
 
     def sendmsg5(self):
-        print("sending5")
         message=self.msg5.text()
         self.port.write(message.upper().encode())
 
     def sendmsg6(self):
-        print("sending6")
         message=self.msg6.text()
         self.port.write(message.upper().encode())
 
     def handleTextChange(self):
+        """
+        This is a poorly handled function where it sends text you type in the big box to the keyer.
+        But hey, you get what you pay for. If you can do better then have at it.
+        Oh and send a pull request when your done.
+        """
         newtext = self.inputbox.toPlainText()
         if len(newtext) < len(self.oldtext):
             self.sendBackspace()
@@ -119,36 +157,37 @@ class winkeyer(QtWidgets.QMainWindow):
         self.oldtext = newtext
 
     def getwaiting(self):
-        if self.port.in_waiting:
-            byte = self.port.read()
-            if (byte[0] & b'\xc0'[0]) == b'\xc0'[0]: #Status Change
-                print(f"Status Change: {byte}")
-                pass
-            elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
-                print(f"Pot change: {byte}")
-                pass
-            else:
-                self.outputbox.insertPlainText(f"{byte.decode()}")
-                #process echoback character
-                print(f"Echo Char: {byte}")
-                pass
+        """
+        Checks to see the keyer has data to send to us.
+        Could be a status change.
+        Could be the user has twisted that turney bit thingy with the knob on it.
+        It could also be an echo of the last character it has sent or is sending.
+        """
+        try:
+            if self.port.in_waiting:
+                byte = self.port.read()
+                if (byte[0] & b'\xc0'[0]) == b'\xc0'[0]: #Status Change
+                    print(f"Status Change: {byte}")
+                elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
+                    print(f"Pot change: {byte}")
+                else: #process echoback character
+                    self.outputbox.insertPlainText(f"{byte.decode()}")             
+        except:
+            self.host_init() #Some one may have unplugged the keyer.
 
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle('Fusion')
 keyer = winkeyer()
 keyer.show()
-#print(f"version: {keyer.version}")
-keyer.setmode()
-keyer.setspeed(18)
-#keyer.send('HELLO')
-#keyer.sendblended('SK')
-#keyer.sendmsg()
-#while True:
-#    keyer.getwaiting()
-#keyer.host_close()
-timer = QtCore.QTimer()
-timer.timeout.connect(keyer.getwaiting)
-timer.start(50)
-
+keyer.host_init()
+if keyer.port:
+    #print(f"version: {keyer.version}")
+    keyer.setmode()
+    keyer.setspeed(18)
+    #keyer.send('HELLO')
+    #keyer.sendblended('SK')
+    timer = QtCore.QTimer()
+    timer.timeout.connect(keyer.getwaiting)
+    timer.start(50)
 app.exec()
