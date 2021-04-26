@@ -73,6 +73,11 @@ class winkeyer(QtWidgets.QMainWindow):
         print(command.encode())
         self.port.write(command.encode())
 
+    def potspeed(self, speed):
+        command=chr(2)+chr(speed-123)
+        self.port.write(command.encode())
+
+
     def setmode(self):
         """
         Basically tells the device 'Hey, well be expecting you to transform letters into boop-ity boop stuff.'
@@ -169,7 +174,7 @@ class winkeyer(QtWidgets.QMainWindow):
                 if (byte[0] & b'\xc0'[0]) == b'\xc0'[0]: #Status Change
                     print(f"Status Change: {byte}")
                 elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
-                    print(f"Pot change: {byte}")
+                    self.potspeed(byte[0])
                 else: #process echoback character
                     self.outputbox.insertPlainText(f"{byte.decode()}")             
         except:
