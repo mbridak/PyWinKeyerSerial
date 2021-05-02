@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import sys, os
-import serial
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5 import uic
 
 class winkeyer(QtWidgets.QMainWindow):
@@ -15,6 +15,7 @@ class winkeyer(QtWidgets.QMainWindow):
     """
     version = 0
     device = '/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0'
+    #device = '/dev/ttyUSB0'
     oldtext = ''
     port = ''
 
@@ -42,13 +43,20 @@ class winkeyer(QtWidgets.QMainWindow):
 
     def host_init(self):
         try:
-            self.port = serial.Serial(self.device, 1200, timeout=1)
+            #self.port = serial.Serial(self.device, 1200, timeout=1)
+            self.port = QSerialPort(self)
+            self.port.setPortName(self.device)
+            self.port.setBaudRate(QSerialPort.Baud1200)
+            if self.port.open(QSerialPort.ReadWrite):
+                self.port.setDataTerminalReady(True)
+                self.port.setRequestToSend(False)
+            else:
+                self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
+                return
         except:
             self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
             self.port = False
             return
-        self.port.setDTR(True)
-        self.port.setRTS(False)
         self.host_open()
 
     def host_open(self):
@@ -56,10 +64,12 @@ class winkeyer(QtWidgets.QMainWindow):
         Sends the open command to winkeyer so it will start listening to us.
         """
         self.host_close()
-        time.sleep(1)
+        time.sleep(1) #the house of cards falls apart if this is removed...
         command = b'\x00\x02'
         self.port.write(command)
-        self.version = self.port.read()
+        self.port.waitForReadyRead()
+        self.version = self.port.read(255)
+        self.port.readyRead.connect(self.getwaiting)
 
     def host_close(self):
         command = b'\x00\x03'
@@ -70,12 +80,11 @@ class winkeyer(QtWidgets.QMainWindow):
         Sets winkeyer speed. I believe valid speeds are from 5 to brainmelt
         """
         command=chr(2)+chr(speed)
-        print(command.encode())
         self.port.write(command.encode())
 
     def potspeed(self, speed):
-        command=chr(2)+chr(speed-123)
-        self.port.write(command.encode())
+        self.setspeed(speed-123)
+        self.potspeed_label.setText(f"{speed-123}")
 
 
     def setmode(self):
@@ -169,14 +178,13 @@ class winkeyer(QtWidgets.QMainWindow):
         It could also be an echo of the last character it has sent or is sending.
         """
         try:
-            if self.port.in_waiting:
-                byte = self.port.read()
-                if (byte[0] & b'\xc0'[0]) == b'\xc0'[0]: #Status Change
-                    print(f"Status Change: {byte}")
-                elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
-                    self.potspeed(byte[0])
-                else: #process echoback character
-                    self.outputbox.insertPlainText(f"{byte.decode()}")             
+            byte = self.port.read(255)
+            if (byte[0] & b'\xc0'[0]) == b'\xc0'[0]: #Status Change
+                print(f"Status Change: {byte}")
+            elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
+                self.potspeed(byte[0])
+            else: #process echoback character
+                self.outputbox.insertPlainText(f"{byte.decode()}")             
         except:
             self.host_init() #Some one may have unplugged the keyer.
 
@@ -187,12 +195,11 @@ keyer = winkeyer()
 keyer.show()
 keyer.host_init()
 if keyer.port:
-    #print(f"version: {keyer.version}")
     keyer.setmode()
     keyer.setspeed(18)
     #keyer.send('HELLO')
     #keyer.sendblended('SK')
-    timer = QtCore.QTimer()
-    timer.timeout.connect(keyer.getwaiting)
-    timer.start(50)
+    #timer = QtCore.QTimer()
+    #timer.timeout.connect(keyer.getwaiting)
+    #timer.start(50)
 app.exec()
