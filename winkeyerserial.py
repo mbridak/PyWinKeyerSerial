@@ -1,7 +1,32 @@
 #!/usr/bin/env python3
 
-import sys, os
-import time
+"""
+Who's at fault here: K6GTE, Mike Bridak
+Where can you yell at me: michael.bridak@gmail.com
+where can I get updates?: https://github.com/mbridak/PyWinKeyerSerial
+
+This is program talks to the WinKeyerUSB and WinKeyerSerial devices by K1EL.
+It sends what you type to the keyer, and sends presaved messages when you press the
+appropriate button.
+
+The first time you run this program it creates a file '.pywinkeyer.json'
+in the root of your home directory. This file is used to store the default serial
+device and the presaved messages.
+
+When you update the presaved message fields they are resaved automatically.
+
+The default speed is set to 18 wpm. This is because that's where I wanted it...
+
+You do you boo.
+
+The speed pot should work to change the code speed on the fly.
+
+This is where I realized that not all K1EL keyers have a speedpot on them....
+
+You really should have gotten the one with the speedpot.....
+"""
+
+import sys, os, json, time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5 import uic
@@ -14,10 +39,21 @@ class winkeyer(QtWidgets.QMainWindow):
     I have a winkeyer usb on order. Will be curious to see what device they use.
     """
     version = 0
-    device = '/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0'
+    #device = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AB0M6Y6H-if00-port0'
+    #device = '/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0'
     #device = '/dev/ttyUSB0'
+    device=''
     oldtext = ''
     port = ''
+    settings_dict = {
+        "device":"/dev/ttyUSB0",
+        "1":"cq cq cq de k6gte k6gte k",
+        "2":"tu 1b org",
+        "3":"agn",
+        "4":"sec?",
+        "5":"class?",
+        "6":"5nn ca"
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -29,6 +65,7 @@ class winkeyer(QtWidgets.QMainWindow):
         self.sendmsg5_button.clicked.connect(self.sendmsg5)
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handleTextChange)
+        self.loadsaved()
 
     def relpath(self, filename):
         """
@@ -40,6 +77,50 @@ class winkeyer(QtWidgets.QMainWindow):
         except:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, filename)
+
+    def loadsaved(self):
+        """
+        load saved default device and messages if they exist.
+        otherwise write some sane defaults as a json text file in the users home directory. 
+        """
+        home = os.path.expanduser("~")
+        if os.path.exists(home+"/.pywinkeyer.json"):
+            f = open(home+"/.pywinkeyer.json", "rt")
+            self.settings_dict = json.loads(f.read())
+        else:
+            f = open(home+"/.pywinkeyer.json", "wt")
+            f.write(json.dumps(self.settings_dict))
+        self.device = self.settings_dict['device']
+        self.msg1.setText(self.settings_dict['1'])
+        self.msg2.setText(self.settings_dict['2'])
+        self.msg3.setText(self.settings_dict['3'])
+        self.msg4.setText(self.settings_dict['4'])
+        self.msg5.setText(self.settings_dict['5'])
+        self.msg6.setText(self.settings_dict['6'])
+        #connect the change events to resave messages 
+        self.msg1.textChanged.connect(self.savestuff)
+        self.msg2.textChanged.connect(self.savestuff)
+        self.msg3.textChanged.connect(self.savestuff)
+        self.msg4.textChanged.connect(self.savestuff)
+        self.msg5.textChanged.connect(self.savestuff)
+        self.msg6.textChanged.connect(self.savestuff)
+
+    def savestuff(self):
+        """
+        save state as a json file in the home directory
+        """
+        home = os.path.expanduser("~")
+        self.settings_dict['1'] = self.msg1.text()
+        self.settings_dict['2'] = self.msg2.text()
+        self.settings_dict['3'] = self.msg3.text()
+        self.settings_dict['4'] = self.msg4.text()
+        self.settings_dict['5'] = self.msg5.text()
+        self.settings_dict['6'] = self.msg6.text()
+        f = open(home+"/.pywinkeyer.json", "wt")
+        f.write(json.dumps(self.settings_dict))
+
+
+
 
     def host_init(self):
         try:
@@ -199,7 +280,4 @@ if keyer.port:
     keyer.setspeed(18)
     #keyer.send('HELLO')
     #keyer.sendblended('SK')
-    #timer = QtCore.QTimer()
-    #timer.timeout.connect(keyer.getwaiting)
-    #timer.start(50)
 app.exec()
