@@ -15,6 +15,6 @@ My winkeyer USB mapped to `/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AB0M6Y6H-i
 
 Any time you edit a message field it is automatically resaved to the json file. 
 
-The default speed is set to 18WPM. The program watches for speedpot changes and sets the speed accordingly. I do realize some of you (WKMini) may not have a speedpot. I'll get around to addressing that `Real soon now.`  
+The default speed is set to by polling the speedpots current state. The program watches for speedpot changes and sets the speed accordingly. I do realize some of you (WKMini) may not have a speedpot. I'll get around to addressing that `Real soon now.`  
 
 ![It's a screenshot](https://github.com/mbridak/PyWinKeyerSerial/raw/main/pic/WINKEYERSCREEN.png)
