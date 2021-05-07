@@ -15,9 +15,7 @@ device and the presaved messages.
 
 When you update the presaved message fields they are resaved automatically.
 
-The default speed is set to 18 wpm. This is because that's where I wanted it...
-
-You do you boo.
+The speed is initially set by polling the speed pot.
 
 The speed pot should work to change the code speed on the fly.
 
@@ -45,6 +43,7 @@ class winkeyer(QtWidgets.QMainWindow):
     device=''
     oldtext = ''
     port = ''
+    initialpot = False
     settings_dict = {
         "device":"/dev/ttyUSB0",
         "1":"cq cq cq de k6gte k6gte k",
@@ -151,6 +150,8 @@ class winkeyer(QtWidgets.QMainWindow):
         self.port.waitForReadyRead()
         self.version = self.port.read(255)
         self.port.readyRead.connect(self.getwaiting)
+        command = b'\x07'  # have the winkeyer return the pot speed setting
+        self.port.write(command)
 
     def host_close(self):
         command = b'\x00\x03'
@@ -160,12 +161,13 @@ class winkeyer(QtWidgets.QMainWindow):
         """
         Sets winkeyer speed. I believe valid speeds are from 5 to brainmelt
         """
-        command=chr(2)+chr(speed)
+        command=chr(2)+chr(int(speed))
         self.port.write(command.encode())
+        self.potspeed_label.setText(f"{int(speed)}")
 
     def potspeed(self, speed):
         self.setspeed(speed-123)
-        self.potspeed_label.setText(f"{speed-123}")
+        #self.potspeed_label.setText(f"{speed-123}")
 
 
     def setmode(self):
@@ -277,7 +279,7 @@ keyer.show()
 keyer.host_init()
 if keyer.port:
     keyer.setmode()
-    keyer.setspeed(18)
+    #keyer.setspeed(18)
     #keyer.send('HELLO')
     #keyer.sendblended('SK')
 app.exec()
