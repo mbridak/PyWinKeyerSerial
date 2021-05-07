@@ -42,7 +42,7 @@ class winkeyer(QtWidgets.QMainWindow):
     #device = '/dev/ttyUSB0'
     device=''
     oldtext = ''
-    port = ''
+    port = False
     initialpot = False
     settings_dict = {
         "device":"/dev/ttyUSB0",
@@ -55,6 +55,11 @@ class winkeyer(QtWidgets.QMainWindow):
     }
 
     def __init__(self, *args, **kwargs):
+        """
+        connects the widgets to their callbacks.
+        queries for existing serial ports.
+        loads in saved defaults.
+        """
         super().__init__(*args, **kwargs)
         uic.loadUi(self.relpath("main.ui"), self)
         self.sendmsg1_button.clicked.connect(self.sendmsg1)
@@ -64,6 +69,11 @@ class winkeyer(QtWidgets.QMainWindow):
         self.sendmsg5_button.clicked.connect(self.sendmsg5)
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handleTextChange)
+        self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
+        a = QSerialPortInfo()
+        for n in a.availablePorts():
+            self.comboBox_device.addItem(n.systemLocation())
+        self.comboBox_device.currentIndexChanged.connect(self.changeSerial)
         self.loadsaved()
 
     def relpath(self, filename):
@@ -76,6 +86,15 @@ class winkeyer(QtWidgets.QMainWindow):
         except:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, filename)
+
+    def changeSerial(self):
+        """
+        The serial device was changed via the onscreen widget.
+        """
+        self.settings_dict['device'] = self.comboBox_device.currentText()
+        self.savestuff()
+        self.device = self.settings_dict['device']
+        self.host_init()
 
     def loadsaved(self):
         """
@@ -118,22 +137,29 @@ class winkeyer(QtWidgets.QMainWindow):
         f = open(home+"/.pywinkeyer.json", "wt")
         f.write(json.dumps(self.settings_dict))
 
-
-
-
     def host_init(self):
+        """
+        Opens the serial port and sets its parameters
+        """
+        self.comboBox_device.setCurrentIndex(self.comboBox_device.findText(self.device))
         try:
-            #self.port = serial.Serial(self.device, 1200, timeout=1)
+            if self.port:
+                self.port.close()
             self.port = QSerialPort(self)
             self.port.setPortName(self.device)
             self.port.setBaudRate(QSerialPort.Baud1200)
+            self.port.setDataBits(QSerialPort.Data8)
+            self.port.setParity(QSerialPort.NoParity)
+            self.port.setStopBits(QSerialPort.TwoStop)
             if self.port.open(QSerialPort.ReadWrite):
                 self.port.setDataTerminalReady(True)
                 self.port.setRequestToSend(False)
             else:
+                self.outputbox.clear()
                 self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
                 return
         except:
+            self.outputbox.clear()
             self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
             self.port = False
             return
@@ -144,11 +170,14 @@ class winkeyer(QtWidgets.QMainWindow):
         Sends the open command to winkeyer so it will start listening to us.
         """
         self.host_close()
-        time.sleep(1) #the house of cards falls apart if this is removed...
+        time.sleep(1) #wait for the keyer to reset.
         command = b'\x00\x02'
         self.port.write(command)
-        self.port.waitForReadyRead()
+        self.port.waitForReadyRead(1000)
         self.version = self.port.read(255)
+        if self.version == b'': #No version... Maybe the wrong serial port was chosen.
+            self.outputbox.clear()
+            self.outputbox.insertPlainText(f"{self.device} is open but WinKeyer is not responding")
         self.port.readyRead.connect(self.getwaiting)
         command = b'\x07'  # have the winkeyer return the pot speed setting
         self.port.write(command)
@@ -163,11 +192,21 @@ class winkeyer(QtWidgets.QMainWindow):
         """
         command=chr(2)+chr(int(speed))
         self.port.write(command.encode())
-        self.potspeed_label.setText(f"{int(speed)}")
+        self.spinBox_speed.setValue(int(speed))
 
     def potspeed(self, speed):
+        """
+        The pot speed value is the 6 LSB of the returned byte.
+        It has the 2 MSB of the byte set to 10 
+        """
         self.setspeed(speed-123)
-        #self.potspeed_label.setText(f"{speed-123}")
+
+
+    def spinboxspeed(self):
+        """
+        User changed the speed value in the spinbox.
+        """
+        self.setspeed(self.spinBox_speed.value())
 
 
     def setmode(self):
