@@ -45,13 +45,13 @@ class winkeyer(QtWidgets.QMainWindow):
     port = False
     initialpot = False
     settings_dict = {
-        "device":"/dev/ttyUSB0",
-        "1":"cq cq cq de k6gte k6gte k",
-        "2":"tu 1b org",
-        "3":"agn",
-        "4":"sec?",
-        "5":"class?",
-        "6":"5nn ca"
+        "device":"",
+        "1":"",
+        "2":"",
+        "3":"",
+        "4":"",
+        "5":"",
+        "6":""
     }
 
     def __init__(self, *args, **kwargs):
@@ -72,7 +72,10 @@ class winkeyer(QtWidgets.QMainWindow):
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
         a = QSerialPortInfo()
         for n in a.availablePorts():
-            self.comboBox_device.addItem(n.systemLocation())
+            if n.systemLocation() != "":
+                self.comboBox_device.addItem(n.systemLocation())
+                self.device = n.systemLocation()
+                self.settings_dict['device'] = self.device
         self.comboBox_device.currentIndexChanged.connect(self.changeSerial)
         self.loadsaved()
 
@@ -157,10 +160,12 @@ class winkeyer(QtWidgets.QMainWindow):
             else:
                 self.outputbox.clear()
                 self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
+                print(f"Unable to open serial port: {self.device}")
                 return
         except:
             self.outputbox.clear()
             self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
+            print(f"Unable to open serial port: {self.device}")
             self.port = False
             return
         self.host_open()
@@ -302,7 +307,8 @@ class winkeyer(QtWidgets.QMainWindow):
         try:
             byte = self.port.read(255)
             if (byte[0] & b'\xc0'[0]) == b'\xc0'[0]: #Status Change
-                print(f"Status Change: {byte}")
+               #print(f"Status Change: {byte}")
+               pass
             elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
                 self.potspeed(byte[0])
             else: #process echoback character
