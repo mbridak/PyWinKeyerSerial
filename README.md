@@ -1,6 +1,9 @@
 # PyWinKeyerSerial
 Talk to the WinKeyerSerial and WinKeyerUSB.
 
+First binary release can be downloaded [here
+](https://github.com/mbridak/PyWinKeyerSerial/releases/download/21.5.7/winkeyerserial)
+
 Focusing on Linux.
 
 requires Python 3, PyQt5
