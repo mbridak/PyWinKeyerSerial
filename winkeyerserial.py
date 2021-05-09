@@ -144,6 +144,7 @@ class winkeyer(QtWidgets.QMainWindow):
         """
         Opens the serial port and sets its parameters
         """
+        self.outputbox.clear()
         self.comboBox_device.setCurrentIndex(self.comboBox_device.findText(self.device))
         try:
             if self.port:
@@ -158,14 +159,10 @@ class winkeyer(QtWidgets.QMainWindow):
                 self.port.setDataTerminalReady(True)
                 self.port.setRequestToSend(False)
             else:
-                self.outputbox.clear()
                 self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
-                print(f"Unable to open serial port: {self.device}")
                 return
         except:
-            self.outputbox.clear()
             self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
-            print(f"Unable to open serial port: {self.device}")
             self.port = False
             return
         self.host_open()
