@@ -5,7 +5,7 @@ Who's at fault here: K6GTE, Mike Bridak
 Where can you yell at me: michael.bridak@gmail.com
 where can I get updates?: https://github.com/mbridak/PyWinKeyerSerial
 
-This is program talks to the WinKeyerUSB and WinKeyerSerial devices by K1EL.
+This program talks to the WinKeyerUSB and WinKeyerSerial devices by K1EL.
 It sends what you type to the keyer, and sends presaved messages when you press the
 appropriate button.
 
@@ -31,15 +31,9 @@ from PyQt5 import uic
 
 class winkeyer(QtWidgets.QMainWindow):
     """
-    The device below will need to be changed to your serial device id.
-    I built the winkeyer serial kit and supplied my own serial device.
-
-    I have a winkeyer usb on order. Will be curious to see what device they use.
+    The main class
     """
     version = 0
-    #device = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AB0M6Y6H-if00-port0'
-    #device = '/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0'
-    #device = '/dev/ttyUSB0'
     device=''
     oldtext = ''
     port = False
@@ -98,6 +92,8 @@ class winkeyer(QtWidgets.QMainWindow):
         self.savestuff()
         self.device = self.settings_dict['device']
         self.host_init()
+        if self.port:
+            self.setmode()
 
     def loadsaved(self):
         """
@@ -309,6 +305,7 @@ class winkeyer(QtWidgets.QMainWindow):
             elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
                 self.potspeed(byte[0])
             else: #process echoback character
+                print(byte.decode())
                 self.outputbox.insertPlainText(f"{byte.decode()}")             
         except:
             self.host_init() #Some one may have unplugged the keyer.
