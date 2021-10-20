@@ -305,7 +305,7 @@ class winkeyer(QtWidgets.QMainWindow):
             elif (byte[0] & b'\xc0'[0]) == b'\x80'[0]: #speed pot change
                 self.potspeed(byte[0])
             else: #process echoback character
-                print(byte.decode())
+                print(byte.decode(), end='', flush=True)
                 self.outputbox.insertPlainText(f"{byte.decode()}")             
         except:
             self.host_init() #Some one may have unplugged the keyer.
