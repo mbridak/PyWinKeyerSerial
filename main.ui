@@ -28,10 +28,22 @@
      <number>15</number>
     </property>
     <item row="8" column="0">
-     <widget class="QLineEdit" name="msg5"/>
+     <widget class="QLineEdit" name="msg5">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="6" column="0">
-     <widget class="QLineEdit" name="msg3"/>
+     <widget class="QLineEdit" name="msg3">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="0" column="1" colspan="2">
      <widget class="QComboBox" name="comboBox_device">
@@ -41,16 +53,32 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="currentText">
        <string/>
       </property>
      </widget>
     </item>
     <item row="4" column="0">
-     <widget class="QLineEdit" name="msg1"/>
+     <widget class="QLineEdit" name="msg1">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="6" column="1" colspan="2">
      <widget class="QPushButton" name="sendmsg3_button">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>send msg 3</string>
       </property>
@@ -58,16 +86,32 @@
     </item>
     <item row="9" column="1" colspan="2">
      <widget class="QPushButton" name="sendmsg6_button">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>send msg 6</string>
       </property>
      </widget>
     </item>
     <item row="9" column="0">
-     <widget class="QLineEdit" name="msg6"/>
+     <widget class="QLineEdit" name="msg6">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="0" column="0">
      <widget class="QLabel" name="label">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>Sent Text</string>
       </property>
@@ -75,6 +119,11 @@
     </item>
     <item row="2" column="0">
      <widget class="QLabel" name="label_2">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>Free text input</string>
       </property>
@@ -82,6 +131,11 @@
     </item>
     <item row="2" column="2">
      <widget class="QSpinBox" name="spinBox_speed">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="minimum">
        <number>5</number>
       </property>
@@ -91,23 +145,51 @@
      </widget>
     </item>
     <item row="5" column="0">
-     <widget class="QLineEdit" name="msg2"/>
+     <widget class="QLineEdit" name="msg2">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="7" column="0">
-     <widget class="QLineEdit" name="msg4"/>
+     <widget class="QLineEdit" name="msg4">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="2" column="1">
      <widget class="QLabel" name="label_3">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>Speed:</string>
       </property>
      </widget>
     </item>
     <item row="3" column="0" colspan="3">
-     <widget class="QPlainTextEdit" name="inputbox"/>
+     <widget class="QPlainTextEdit" name="inputbox">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
     <item row="8" column="1" colspan="2">
      <widget class="QPushButton" name="sendmsg5_button">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>send msg 5</string>
       </property>
@@ -115,6 +197,11 @@
     </item>
     <item row="5" column="1" colspan="2">
      <widget class="QPushButton" name="sendmsg2_button">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>send msg 2</string>
       </property>
@@ -122,6 +209,11 @@
     </item>
     <item row="4" column="1" colspan="2">
      <widget class="QPushButton" name="sendmsg1_button">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>send msg 1</string>
       </property>
@@ -129,13 +221,24 @@
     </item>
     <item row="7" column="1" colspan="2">
      <widget class="QPushButton" name="sendmsg4_button">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
       <property name="text">
        <string>send msg 4</string>
       </property>
      </widget>
     </item>
     <item row="1" column="0" colspan="3">
-     <widget class="QPlainTextEdit" name="outputbox"/>
+     <widget class="QPlainTextEdit" name="outputbox">
+      <property name="font">
+       <font>
+        <family>JetBrains Mono</family>
+       </font>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>

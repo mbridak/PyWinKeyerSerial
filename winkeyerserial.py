@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+import logging
+logging.basicConfig(level=logging.WARNING)
+
 """
 Who's at fault here: K6GTE, Mike Bridak
 Where can you yell at me: michael.bridak@gmail.com
@@ -27,7 +30,23 @@ You really should have gotten the one with the speedpot.....
 import sys, os, json, time
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
+from PyQt5.QtCore import QDir
+from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
+
+def relpath(filename):
+		try:
+			base_path = sys._MEIPASS # pylint: disable=no-member
+		except:
+			base_path = os.path.abspath(".")
+		return os.path.join(base_path, filename)
+
+def load_fonts_from_dir(directory):
+		families = set()
+		for fi in QDir(directory).entryInfoList(["*.ttf", "*.woff", "*.woff2"]):
+			_id = QFontDatabase.addApplicationFont(fi.absoluteFilePath())
+			families |= set(QFontDatabase.applicationFontFamilies(_id))
+		return families
 
 class winkeyer(QtWidgets.QMainWindow):
     """
@@ -313,6 +332,9 @@ class winkeyer(QtWidgets.QMainWindow):
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle('Fusion')
+font_dir = relpath("font")
+families = load_fonts_from_dir(os.fspath(font_dir))
+logging.info(families)
 keyer = winkeyer()
 keyer.show()
 keyer.host_init()

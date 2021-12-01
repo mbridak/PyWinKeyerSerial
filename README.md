@@ -18,4 +18,27 @@ Any time you edit a message field, it is automatically resaved to the json file.
 
 The default speed is set to by polling the speedpots current state. The program watches for speedpot changes and sets the speed accordingly. I do realize some of you (WKMini) may not have a speedpot. You can change the speed via the onscreen widget.  
 
-![It's a screenshot](https://github.com/mbridak/PyWinKeyerSerial/raw/main/pic/WINKEYERSCREEN.png)
+![It's a screenshot](pic/WINKEYERSCREEN.png)
+
+## Running from source.
+
+Install the requirements.
+
+`sudo apt-get install python3-pyqt5.qtserialport python3-pyqt5 python3-requests`
+
+Then run the code.
+
+'python3 winkeyerserial.py'
+
+## Building your own binary.
+
+Install pyinstaller.
+
+`python3 -m pip3 install pyinstaller`
+
+Build the binary.
+
+'pyinstaller -F winkeyerserial.spec'
+
+You will find the binary in the newly created dist directory.
+ 
