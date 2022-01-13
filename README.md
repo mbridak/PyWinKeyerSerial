@@ -5,7 +5,7 @@
 Talk to the WinKeyerSerial, WinKeyerUSB and WKMini.
 
 First binary release can be downloaded [here
-](https://github.com/mbridak/PyWinKeyerSerial/releases/download/21.5.7/winkeyerserial)
+](https://github.com/mbridak/PyWinKeyerSerial/releases/tag/22.1.12)
 
 Focusing on Linux.
 
