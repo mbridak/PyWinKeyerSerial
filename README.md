@@ -42,3 +42,9 @@ Build the binary.
 
 You will find the binary in the newly created dist directory.
  
+ ## What's new
+ 
+ Added an XMLRPC server. So now my [Winter Field Day](https://github.com/mbridak/WinterFieldDayLogger), [Field Day](https://github.com/mbridak/FieldDayLogger) and [K1USNSST](https://github.com/mbridak/k1usnsst) Loggers will be able to send CW macros to this. The interface for the client is dead simple:
+ `xmlrpc.client.ServerProxy("http://localhost:8000").k1elsendstring("Hello World")`
+ That's it...
+  
