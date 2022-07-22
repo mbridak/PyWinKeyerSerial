@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cp ../dist/winkeyerserial ~/.local/bin/
+if [ -f "../dist/winkeyerserial" ]; then
+    cp ../dist/winkeyerserial ~/.local/bin/
+fi
 
 xdg-icon-resource install --size 64 --context apps --mode user k6gte-pywinkey.png k6gte-pywinkey
 
