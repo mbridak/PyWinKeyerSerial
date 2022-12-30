@@ -29,14 +29,18 @@ import sys
 import os
 import json
 import time
-
+import pkgutil
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import logging
 
+
+import serial
+from serial.tools.list_ports import comports
+
+# from PyQt5.QtSerialPort import QSerialPort
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget
-from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
 from PyQt5.QtCore import QDir
 from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
@@ -50,14 +54,17 @@ MESSAGE = ""
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
     """Doc String"""
+
     rpc_paths = ("/RPC2",)
 
 
 class RPCThread(QThread):
     """Doc String"""
+
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.server = None
+
     def run(self):
         """Doc String"""
         # sleep a little bit to make sure QApplication is running.
@@ -71,6 +78,7 @@ class RPCThread(QThread):
 
 class RPCWidget(QWidget):
     """Doc String"""
+
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.thread = RPCThread(self)
@@ -81,18 +89,6 @@ def k1elsendstring(sss):
     """Doc String"""
     global MESSAGE
     MESSAGE = f"{sss} "
-
-
-def relpath(filename):
-    """
-    Checks to see if program has been packaged with pyinstaller.
-    If so base dir is in a temp folder.
-    """
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        base_path = getattr(sys, "_MEIPASS")
-    else:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, filename)
 
 
 def load_fonts_from_dir(directory):
@@ -112,7 +108,7 @@ class WinKeyer(QtWidgets.QMainWindow):
     version = 0
     device = ""
     oldtext = ""
-    port = False
+    port = None
     initialpot = False
     settings_dict = {"device": "", "1": "", "2": "", "3": "", "4": "", "5": "", "6": ""}
 
@@ -122,8 +118,12 @@ class WinKeyer(QtWidgets.QMainWindow):
         queries for existing serial ports.
         loads in saved defaults.
         """
+        self.working_path = os.path.dirname(
+            pkgutil.get_loader("winkeyerserial").get_filename()
+        )
+        data_path = self.working_path + "/main.ui"
         super().__init__(*args, **kwargs)
-        uic.loadUi(self.relpath("main.ui"), self)
+        uic.loadUi(data_path, self)
         self.sendmsg1_button.clicked.connect(self.sendmsg1)
         self.sendmsg2_button.clicked.connect(self.sendmsg2)
         self.sendmsg3_button.clicked.connect(self.sendmsg3)
@@ -132,25 +132,15 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
-        port_info = QSerialPortInfo()
-        for serial_port in port_info.availablePorts():
-            if serial_port.systemLocation() != "":
-                self.comboBox_device.addItem(serial_port.systemLocation())
-                self.device = serial_port.systemLocation()
-                self.settings_dict["device"] = self.device
+        # self.timer2 = QTimer()
+        # self.timer2.timeout.connect(self.getwaiting)
+        # port_info = QSerialPortInfo()
+        for serialport in comports():
+            self.comboBox_device.addItem(serialport.device)
+            self.device = serialport.device
+            self.settings_dict["device"] = self.device
         self.comboBox_device.currentIndexChanged.connect(self.change_serial)
         self.loadsaved()
-
-    def relpath(self, filename):
-        """
-        This is used if run as a pyinstaller packaged application.
-        So the app can find the temp files.
-        """
-        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-            base_path = getattr(sys, "_MEIPASS")
-        else:
-            base_path = os.path.abspath(".")
-        return os.path.join(base_path, filename)
 
     def change_serial(self):
         """
@@ -170,10 +160,14 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         home = os.path.expanduser("~")
         if os.path.exists(home + "/.pywinkeyer.json"):
-            with open(home + "/.pywinkeyer.json", "rt", encoding='utf-8') as file_handle:
+            with open(
+                home + "/.pywinkeyer.json", "rt", encoding="utf-8"
+            ) as file_handle:
                 self.settings_dict = json.loads(file_handle.read())
         else:
-            with open(home + "/.pywinkeyer.json", "wt", encoding='utf-8') as file_handle:
+            with open(
+                home + "/.pywinkeyer.json", "wt", encoding="utf-8"
+            ) as file_handle:
                 file_handle.write(json.dumps(self.settings_dict))
         self.device = self.settings_dict["device"]
         self.msg1.setText(self.settings_dict.get("1"))
@@ -201,7 +195,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.settings_dict["4"] = self.msg4.text()
         self.settings_dict["5"] = self.msg5.text()
         self.settings_dict["6"] = self.msg6.text()
-        with open(home + "/.pywinkeyer.json", "wt", encoding='utf-8') as file_handle:
+        with open(home + "/.pywinkeyer.json", "wt", encoding="utf-8") as file_handle:
             file_handle.write(json.dumps(self.settings_dict))
 
     def host_init(self):
@@ -213,21 +207,22 @@ class WinKeyer(QtWidgets.QMainWindow):
         try:
             if self.port:
                 self.port.close()
-            self.port = QSerialPort(self)
-            self.port.setPortName(self.device)
-            self.port.setBaudRate(QSerialPort.Baud1200)
-            self.port.setDataBits(QSerialPort.Data8)
-            self.port.setParity(QSerialPort.NoParity)
-            self.port.setStopBits(QSerialPort.TwoStop)
-            if self.port.open(QSerialPort.ReadWrite):
-                self.port.setDataTerminalReady(True)
-                self.port.setRequestToSend(False)
-            else:
+            self.port = serial.Serial()
+            self.port.port = self.device
+            self.port.baudrate = 1200
+            self.port.bytesize = serial.EIGHTBITS
+            self.port.parity = serial.PARITY_NONE
+            self.port.stopbits = serial.STOPBITS_TWO
+            self.port.dsrdtr = True
+            self.port.rtscts = False
+            self.port.timeout = 1.0
+            self.port.open()
+            if not self.port.is_open:
                 self.outputbox.insertPlainText(
                     f"Unable to open serial port: {self.device}"
                 )
                 return
-        except:
+        except serial.serialutil.SerialException:
             self.outputbox.insertPlainText(f"Unable to open serial port: {self.device}")
             self.port = False
             return
@@ -241,14 +236,16 @@ class WinKeyer(QtWidgets.QMainWindow):
         time.sleep(1)  # wait for the keyer to reset.
         command = b"\x00\x02"
         self.port.write(command)
-        self.port.waitForReadyRead(1000)
+        # self.port.waitForReadyRead(1000)
         self.version = self.port.read(255)
         if self.version == b"":  # No version... Maybe the wrong serial port was chosen.
             self.outputbox.clear()
             self.outputbox.insertPlainText(
                 f"{self.device} is open but WinKeyer is not responding"
             )
-        self.port.readyRead.connect(self.getwaiting)
+        # FIXME - no readyRead
+        # self.timer2.start(100)
+        # self.port.readyRead.connect(self.getwaiting)
         command = b"\x07"  # have the winkeyer return the pot speed setting
         self.port.write(command)
 
@@ -387,15 +384,16 @@ class WinKeyer(QtWidgets.QMainWindow):
         It could also be an echo of the last character it has sent or is sending.
         """
         try:
-            byte = self.port.read(255)
-            if (byte[0] & b"\xc0"[0]) == b"\xc0"[0]:  # Status Change
-                # print(f"Status Change: {byte}")
-                pass
-            elif (byte[0] & b"\xc0"[0]) == b"\x80"[0]:  # speed pot change
-                self.potspeed(byte[0])
-            else:  # process echoback character
-                print(byte.decode(), end="", flush=True)
-                self.outputbox.insertPlainText(f"{byte.decode()}")
+            if self.port.in_waiting():
+                byte = self.port.read(255)
+                if (byte[0] & b"\xc0"[0]) == b"\xc0"[0]:  # Status Change
+                    # print(f"Status Change: {byte}")
+                    pass
+                elif (byte[0] & b"\xc0"[0]) == b"\x80"[0]:  # speed pot change
+                    self.potspeed(byte[0])
+                else:  # process echoback character
+                    print(byte.decode(), end="", flush=True)
+                    self.outputbox.insertPlainText(f"{byte.decode()}")
         except:
             self.host_init()  # Some one may have unplugged the keyer.
 
@@ -412,10 +410,16 @@ class WinKeyer(QtWidgets.QMainWindow):
             self.port.write(sss.upper().encode())
 
 
+path = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
+os.system(
+    "xdg-icon-resource install --size 64 --context apps --mode user "
+    f"{path}/k6gte-pywinkey.png k6gte-winkeyerserial"
+)
+os.system(f"xdg-desktop-menu install {path}/k6gte-winkeyerserial.desktop")
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle("Fusion")
-font_dir = relpath("font")
-families = load_fonts_from_dir(os.fspath(font_dir))
+
+families = load_fonts_from_dir(path)
 logging.info(families)
 keyer = WinKeyer()
 keyer.show()
@@ -430,5 +434,12 @@ rpcwidget = RPCWidget()
 # rpcwidget.show()
 timer = QTimer()
 timer.timeout.connect(keyer.checkmessage)  # Do not do this.
-timer.start(250)
-app.exec()
+
+
+def main():
+    timer.start(250)
+    app.exec()
+
+
+if __name__ == "__main__":
+    main()
