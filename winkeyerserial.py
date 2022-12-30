@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-
-import logging
-
-logging.basicConfig(level=logging.WARNING)
-
 """
 Who's at fault here: K6GTE, Mike Bridak
 Where can you yell at me: michael.bridak@gmail.com
@@ -28,7 +23,17 @@ This is where I realized that not all K1EL keyers have a speedpot on them....
 You really should have gotten the one with the speedpot.....
 """
 
-import sys, os, json, time
+# pylint: disable=no-name-in-module
+
+import sys
+import os
+import json
+import time
+
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
+import logging
+
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtSerialPort import QSerialPort, QSerialPortInfo
@@ -38,19 +43,23 @@ from PyQt5 import uic
 from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import QThread
 
-from xmlrpc.server import SimpleXMLRPCServer
-from xmlrpc.server import SimpleXMLRPCRequestHandler
+logging.basicConfig(level=logging.WARNING)
 
-
-message = ""
+MESSAGE = ""
 
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
+    """Doc String"""
     rpc_paths = ("/RPC2",)
 
 
 class RPCThread(QThread):
+    """Doc String"""
+    def __init__(self, parent=None):
+        QThread.__init__(self, parent)
+        self.server = None
     def run(self):
+        """Doc String"""
         # sleep a little bit to make sure QApplication is running.
         self.sleep(1)
         print("--- starting server…")
@@ -61,6 +70,7 @@ class RPCThread(QThread):
 
 
 class RPCWidget(QWidget):
+    """Doc String"""
     def __init__(self, parent=None):
         QWidget.__init__(self, parent)
         self.thread = RPCThread(self)
@@ -68,27 +78,33 @@ class RPCWidget(QWidget):
 
 
 def k1elsendstring(sss):
-    global message
-    message = f"{sss} "
+    """Doc String"""
+    global MESSAGE
+    MESSAGE = f"{sss} "
 
 
 def relpath(filename):
-    try:
-        base_path = sys._MEIPASS  # pylint: disable=no-member
-    except:
+    """
+    Checks to see if program has been packaged with pyinstaller.
+    If so base dir is in a temp folder.
+    """
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        base_path = getattr(sys, "_MEIPASS")
+    else:
         base_path = os.path.abspath(".")
     return os.path.join(base_path, filename)
 
 
 def load_fonts_from_dir(directory):
-    families = set()
-    for fi in QDir(directory).entryInfoList(["*.ttf", "*.woff", "*.woff2"]):
-        _id = QFontDatabase.addApplicationFont(fi.absoluteFilePath())
-        families |= set(QFontDatabase.applicationFontFamilies(_id))
-    return families
+    """Load font families"""
+    families_set = set()
+    for thing in QDir(directory).entryInfoList(["*.ttf", "*.woff", "*.woff2"]):
+        _id = QFontDatabase.addApplicationFont(thing.absoluteFilePath())
+        families_set |= set(QFontDatabase.applicationFontFamilies(_id))
+    return families_set
 
 
-class winkeyer(QtWidgets.QMainWindow):
+class WinKeyer(QtWidgets.QMainWindow):
     """
     The main class
     """
@@ -114,15 +130,15 @@ class winkeyer(QtWidgets.QMainWindow):
         self.sendmsg4_button.clicked.connect(self.sendmsg4)
         self.sendmsg5_button.clicked.connect(self.sendmsg5)
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
-        self.inputbox.textChanged.connect(self.handleTextChange)
+        self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
-        a = QSerialPortInfo()
-        for n in a.availablePorts():
-            if n.systemLocation() != "":
-                self.comboBox_device.addItem(n.systemLocation())
-                self.device = n.systemLocation()
+        port_info = QSerialPortInfo()
+        for serial_port in port_info.availablePorts():
+            if serial_port.systemLocation() != "":
+                self.comboBox_device.addItem(serial_port.systemLocation())
+                self.device = serial_port.systemLocation()
                 self.settings_dict["device"] = self.device
-        self.comboBox_device.currentIndexChanged.connect(self.changeSerial)
+        self.comboBox_device.currentIndexChanged.connect(self.change_serial)
         self.loadsaved()
 
     def relpath(self, filename):
@@ -130,19 +146,19 @@ class winkeyer(QtWidgets.QMainWindow):
         This is used if run as a pyinstaller packaged application.
         So the app can find the temp files.
         """
-        try:
-            base_path = sys._MEIPASS  # pylint: disable=no-member
-        except:
+        if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+            base_path = getattr(sys, "_MEIPASS")
+        else:
             base_path = os.path.abspath(".")
         return os.path.join(base_path, filename)
 
-    def changeSerial(self):
+    def change_serial(self):
         """
         The serial device was changed via the onscreen widget.
         """
         self.settings_dict["device"] = self.comboBox_device.currentText()
         self.savestuff()
-        self.device = self.settings_dict["device"]
+        self.device = self.settings_dict.get("device")
         self.host_init()
         if self.port:
             self.setmode()
@@ -154,18 +170,18 @@ class winkeyer(QtWidgets.QMainWindow):
         """
         home = os.path.expanduser("~")
         if os.path.exists(home + "/.pywinkeyer.json"):
-            f = open(home + "/.pywinkeyer.json", "rt")
-            self.settings_dict = json.loads(f.read())
+            with open(home + "/.pywinkeyer.json", "rt", encoding='utf-8') as file_handle:
+                self.settings_dict = json.loads(file_handle.read())
         else:
-            f = open(home + "/.pywinkeyer.json", "wt")
-            f.write(json.dumps(self.settings_dict))
+            with open(home + "/.pywinkeyer.json", "wt", encoding='utf-8') as file_handle:
+                file_handle.write(json.dumps(self.settings_dict))
         self.device = self.settings_dict["device"]
-        self.msg1.setText(self.settings_dict["1"])
-        self.msg2.setText(self.settings_dict["2"])
-        self.msg3.setText(self.settings_dict["3"])
-        self.msg4.setText(self.settings_dict["4"])
-        self.msg5.setText(self.settings_dict["5"])
-        self.msg6.setText(self.settings_dict["6"])
+        self.msg1.setText(self.settings_dict.get("1"))
+        self.msg2.setText(self.settings_dict.get("2"))
+        self.msg3.setText(self.settings_dict.get("3"))
+        self.msg4.setText(self.settings_dict.get("4"))
+        self.msg5.setText(self.settings_dict.get("5"))
+        self.msg6.setText(self.settings_dict.get("6"))
         # connect the change events to resave messages
         self.msg1.textChanged.connect(self.savestuff)
         self.msg2.textChanged.connect(self.savestuff)
@@ -185,8 +201,8 @@ class winkeyer(QtWidgets.QMainWindow):
         self.settings_dict["4"] = self.msg4.text()
         self.settings_dict["5"] = self.msg5.text()
         self.settings_dict["6"] = self.msg6.text()
-        f = open(home + "/.pywinkeyer.json", "wt")
-        f.write(json.dumps(self.settings_dict))
+        with open(home + "/.pywinkeyer.json", "wt", encoding='utf-8') as file_handle:
+            file_handle.write(json.dumps(self.settings_dict))
 
     def host_init(self):
         """
@@ -237,6 +253,9 @@ class winkeyer(QtWidgets.QMainWindow):
         self.port.write(command)
 
     def host_close(self):
+        """
+        Sends the close command to winkeyer
+        """
         command = b"\x00\x03"
         self.port.write(command)
 
@@ -263,7 +282,8 @@ class winkeyer(QtWidgets.QMainWindow):
 
     def setmode(self):
         """
-        Basically tells the device 'Hey, well be expecting you to transform letters into boop-ity boop stuff.'
+        Basically tells the device 'Hey, well be expecting you to
+        transform letters into boop-ity boop stuff.'
         """
         command = b"\x0e\x44"
         self.port.write(command)
@@ -282,7 +302,7 @@ class winkeyer(QtWidgets.QMainWindow):
         command = msg.upper().encode()
         self.port.write(command)
 
-    def sendBackspace(self):
+    def send_backspace(self):
         """
         Erases a character from the end of the winkeyer buffer if it has not been sent already.
         """
@@ -307,30 +327,45 @@ class winkeyer(QtWidgets.QMainWindow):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        message = self.msg1.text()
-        self.port.write(message.upper().encode())
+        local_message = self.msg1.text()
+        self.port.write(local_message.upper().encode())
 
     def sendmsg2(self):
-        message = self.msg2.text()
-        self.port.write(message.upper().encode())
+        """
+        This and the following just pull text from the fields next to the button and sends it.
+        """
+        local_message = self.msg2.text()
+        self.port.write(local_message.upper().encode())
 
     def sendmsg3(self):
-        message = self.msg3.text()
-        self.port.write(message.upper().encode())
+        """
+        This and the following just pull text from the fields next to the button and sends it.
+        """
+        local_message = self.msg3.text()
+        self.port.write(local_message.upper().encode())
 
     def sendmsg4(self):
-        message = self.msg4.text()
-        self.port.write(message.upper().encode())
+        """
+        This and the following just pull text from the fields next to the button and sends it.
+        """
+        local_message = self.msg4.text()
+        self.port.write(local_message.upper().encode())
 
     def sendmsg5(self):
-        message = self.msg5.text()
-        self.port.write(message.upper().encode())
+        """
+        This and the following just pull text from the fields next to the button and sends it.
+        """
+        local_message = self.msg5.text()
+        self.port.write(local_message.upper().encode())
 
     def sendmsg6(self):
-        message = self.msg6.text()
-        self.port.write(message.upper().encode())
+        """
+        This and the following just pull text from the fields next to the button and sends it.
+        """
+        local_message = self.msg6.text()
+        self.port.write(local_message.upper().encode())
 
-    def handleTextChange(self):
+    def handle_text_change(self):
         """
         This is a poorly handled function where it sends text you type in the big box to the keyer.
         But hey, you get what you pay for. If you can do better then have at it.
@@ -338,7 +373,7 @@ class winkeyer(QtWidgets.QMainWindow):
         """
         newtext = self.inputbox.toPlainText()
         if len(newtext) < len(self.oldtext):
-            self.sendBackspace()
+            self.send_backspace()
             self.oldtext = newtext
             return
         self.send(newtext[len(self.oldtext) :])
@@ -370,9 +405,9 @@ class winkeyer(QtWidgets.QMainWindow):
         This should be handled with slots and signals.
         But.... It works.
         """
-        global message
-        sss = message
-        message = ""
+        global MESSAGE
+        sss = MESSAGE
+        MESSAGE = ""
         if sss:
             self.port.write(sss.upper().encode())
 
@@ -382,7 +417,7 @@ app.setStyle("Fusion")
 font_dir = relpath("font")
 families = load_fonts_from_dir(os.fspath(font_dir))
 logging.info(families)
-keyer = winkeyer()
+keyer = WinKeyer()
 keyer.show()
 keyer.host_init()
 if keyer.port:
