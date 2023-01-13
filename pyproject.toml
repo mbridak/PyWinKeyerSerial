@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winkeyerserial" 
-version = "1.0.0"
-description = "Notifications of adding/removing serial ports."
+version = "23.1.12"
+description = "Talk to K1EL winkeyer"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
@@ -27,8 +27,8 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/mbridak/serial_monitor"
-"Bug Tracker" = "https://github.com/mbridak/serial_monitor/issues"
+"Homepage" = "https://github.com/mbridak/PyWinKeyerSerial"
+"Bug Tracker" = "https://github.com/mbridak/PyWinKeyerSerial/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

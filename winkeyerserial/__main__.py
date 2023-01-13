@@ -132,9 +132,8 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
-        # self.timer2 = QTimer()
-        # self.timer2.timeout.connect(self.getwaiting)
-        # port_info = QSerialPortInfo()
+        self.timer2 = QTimer()
+        self.timer2.timeout.connect(self.getwaiting)
         for serialport in comports():
             self.comboBox_device.addItem(serialport.device)
             self.device = serialport.device
@@ -215,7 +214,7 @@ class WinKeyer(QtWidgets.QMainWindow):
             self.port.stopbits = serial.STOPBITS_TWO
             self.port.dsrdtr = True
             self.port.rtscts = False
-            self.port.timeout = 1.0
+            self.port.timeout = 0
             self.port.open()
             if not self.port.is_open:
                 self.outputbox.insertPlainText(
@@ -236,16 +235,14 @@ class WinKeyer(QtWidgets.QMainWindow):
         time.sleep(1)  # wait for the keyer to reset.
         command = b"\x00\x02"
         self.port.write(command)
-        # self.port.waitForReadyRead(1000)
+        time.sleep(0.5)
         self.version = self.port.read(255)
         if self.version == b"":  # No version... Maybe the wrong serial port was chosen.
             self.outputbox.clear()
             self.outputbox.insertPlainText(
                 f"{self.device} is open but WinKeyer is not responding"
             )
-        # FIXME - no readyRead
-        # self.timer2.start(100)
-        # self.port.readyRead.connect(self.getwaiting)
+        self.timer2.start(100)
         command = b"\x07"  # have the winkeyer return the pot speed setting
         self.port.write(command)
 
@@ -384,15 +381,15 @@ class WinKeyer(QtWidgets.QMainWindow):
         It could also be an echo of the last character it has sent or is sending.
         """
         try:
-            if self.port.in_waiting():
-                byte = self.port.read(255)
+            if self.port.in_waiting:
+                byte = self.port.read(1)
                 if (byte[0] & b"\xc0"[0]) == b"\xc0"[0]:  # Status Change
                     # print(f"Status Change: {byte}")
                     pass
                 elif (byte[0] & b"\xc0"[0]) == b"\x80"[0]:  # speed pot change
                     self.potspeed(byte[0])
                 else:  # process echoback character
-                    print(byte.decode(), end="", flush=True)
+                    # print(byte.decode(), end="", flush=True)
                     self.outputbox.insertPlainText(f"{byte.decode()}")
         except:
             self.host_init()  # Some one may have unplugged the keyer.
@@ -426,12 +423,7 @@ keyer.show()
 keyer.host_init()
 if keyer.port:
     keyer.setmode()
-# keyer.setspeed(18)
-# keyer.send('HELLO')
-# keyer.sendblended('SK')
-
 rpcwidget = RPCWidget()
-# rpcwidget.show()
 timer = QTimer()
 timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 
