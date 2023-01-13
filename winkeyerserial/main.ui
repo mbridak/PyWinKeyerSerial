@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>325</width>
-    <height>415</height>
+    <width>371</width>
+    <height>502</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>K6GTE PyWinKeyer</string>
+   <string>K6GTE winkeyerserial</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0">
