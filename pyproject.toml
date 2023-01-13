@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "winkeyerserial" 
+version = "23.1.12"
+description = "Talk to K1EL winkeyer"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+  { name="Michael Bridak", email="michael.bridak@gmail.com" },
+]
+dependencies = [
+    "PyQt5",
+    "pySerial",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Environment :: X11 Applications :: Qt",
+    "Operating System :: POSIX :: Linux",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: English",
+    "Topic :: Communications :: Ham Radio",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/mbridak/PyWinKeyerSerial"
+"Bug Tracker" = "https://github.com/mbridak/PyWinKeyerSerial/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+"winkeyerserial" = ["*.png", "*.desktop", "*.ui", "*.ttf",]
+
+[project.scripts]
+winkeyerserial = "winkeyerserial.__main__:main"
