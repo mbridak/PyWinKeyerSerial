@@ -429,6 +429,17 @@ timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 
 
 def main():
+    """Main entry"""
+    path = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
+    os.system(
+        "xdg-icon-resource install --size 64 --context apps --mode user "
+        f"{path}/k6gte-pywinkey.png k6gte-pywinkey"
+    )
+    # os.system(
+    #     "xdg-icon-resource install --size 32 --context apps --mode user "
+    #     f"{path}/k6gte-serial_monitor-32.png k6gte-serial_monitor"
+    # )
+    os.system(f"xdg-desktop-menu install {path}/k6gte-winkeyerserial.desktop")
     timer.start(250)
     app.exec()
 
