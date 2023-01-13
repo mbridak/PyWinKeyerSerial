@@ -23,7 +23,7 @@ This is where I realized that not all K1EL keyers have a speedpot on them....
 You really should have gotten the one with the speedpot.....
 """
 
-# pylint: disable=no-name-in-module
+# pylint: disable=no-name-in-module, c-extension-no-member, global-statement, bare-except
 
 import sys
 import os
@@ -407,16 +407,10 @@ class WinKeyer(QtWidgets.QMainWindow):
             self.port.write(sss.upper().encode())
 
 
-path = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
-os.system(
-    "xdg-icon-resource install --size 64 --context apps --mode user "
-    f"{path}/k6gte-pywinkey.png k6gte-winkeyerserial"
-)
-os.system(f"xdg-desktop-menu install {path}/k6gte-winkeyerserial.desktop")
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle("Fusion")
-
-families = load_fonts_from_dir(path)
+PATH = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
+families = load_fonts_from_dir(PATH)
 logging.info(families)
 keyer = WinKeyer()
 keyer.show()
@@ -430,16 +424,11 @@ timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 
 def main():
     """Main entry"""
-    path = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
     os.system(
         "xdg-icon-resource install --size 64 --context apps --mode user "
-        f"{path}/k6gte-pywinkey.png k6gte-pywinkey"
+        f"{PATH}/k6gte-pywinkey.png k6gte-pywinkey"
     )
-    # os.system(
-    #     "xdg-icon-resource install --size 32 --context apps --mode user "
-    #     f"{path}/k6gte-serial_monitor-32.png k6gte-serial_monitor"
-    # )
-    os.system(f"xdg-desktop-menu install {path}/k6gte-winkeyerserial.desktop")
+    os.system(f"xdg-desktop-menu install {PATH}/k6gte-winkeyerserial.desktop")
     timer.start(250)
     app.exec()
 
