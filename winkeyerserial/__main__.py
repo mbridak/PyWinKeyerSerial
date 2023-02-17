@@ -42,6 +42,7 @@ from serial.tools.list_ports import comports
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import QDir
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontDatabase
 from PyQt5 import uic
 from PyQt5.QtCore import QTimer
@@ -136,6 +137,10 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.timer2.timeout.connect(self.getwaiting)
         for serialport in comports():
             self.comboBox_device.addItem(serialport.device)
+            index = self.comboBox_device.findText(serialport.device)
+            self.comboBox_device.setItemData(
+                index, serialport.description, Qt.ToolTipRole
+            )
             self.device = serialport.device
             self.settings_dict["device"] = self.device
         self.comboBox_device.currentIndexChanged.connect(self.change_serial)
@@ -425,8 +430,16 @@ timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 def main():
     """Main entry"""
     os.system(
+        "xdg-icon-resource install --size 32 --context apps --mode user "
+        f"{PATH}/k6gte-winkeyerserial-32.png k6gte-winkeyerserial"
+    )
+    os.system(
         "xdg-icon-resource install --size 64 --context apps --mode user "
-        f"{PATH}/k6gte-pywinkey.png k6gte-pywinkey"
+        f"{PATH}/k6gte-winkeyerserial-64.png k6gte-winkeyerserial"
+    )
+    os.system(
+        "xdg-icon-resource install --size 128 --context apps --mode user "
+        f"{PATH}/k6gte-winkeyerserial-128.png k6gte-winkeyerserial"
     )
     os.system(f"xdg-desktop-menu install {PATH}/k6gte-winkeyerserial.desktop")
     timer.start(250)
