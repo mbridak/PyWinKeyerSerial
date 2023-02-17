@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winkeyerserial" 
-version = "23.1.13"
+version = "23.2.17"
 description = "Talk to K1EL winkeyer"
 readme = "README.md"
 requires-python = ">=3.9"
