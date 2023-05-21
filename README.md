@@ -35,6 +35,7 @@ pip uninstall winkeyerserial
 
 ## What's new
 
+- [23-5-11] Added xmlrpc function to set speed.
 - [23-2-17] Added serial device descriptions (hover tooltip) to the detected serial devices in the dropdown.
 - Added an XMLRPC server. So now my [Winter Field Day](https://github.com/mbridak/WinterFieldDayLogger), [Field Day](https://github.com/mbridak/FieldDayLogger) and [K1USNSST](https://github.com/mbridak/k1usnsst) Loggers will be able to send CW macros to this. The interface for the client is dead simple:
  `xmlrpc.client.ServerProxy("http://localhost:8000").k1elsendstring("Hello World")`

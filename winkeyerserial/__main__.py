@@ -73,6 +73,7 @@ class RPCThread(QThread):
         print("--- starting server…")
         with SimpleXMLRPCServer(("0.0.0.0", 8000), allow_none=True) as self.server:
             self.server.register_function(k1elsendstring)
+            self.server.register_function(setspeed)
             self.server.register_introspection_functions()
             self.server.serve_forever()
 
@@ -425,6 +426,11 @@ if keyer.port:
 rpcwidget = RPCWidget()
 timer = QTimer()
 timer.timeout.connect(keyer.checkmessage)  # Do not do this.
+
+
+def setspeed(speed) -> None:
+    """doc"""
+    keyer.setspeed(speed)
 
 
 def main():
