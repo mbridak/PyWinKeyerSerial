@@ -50,6 +50,10 @@ from PyQt5.QtCore import QThread
 
 logging.basicConfig(level=logging.WARNING)
 
+if os.environ.get("XDG_CURRENT_DESKTOP", False) == "GNOME":
+    os.environ["QT_QPA_PLATFORMTHEME"] = "gnome"
+    os.environ["QT_STYLE_OVERRIDE"] = "Adwaita-Dark"
+
 MESSAGE = ""
 
 
