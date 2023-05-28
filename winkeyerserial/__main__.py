@@ -50,10 +50,6 @@ from PyQt5.QtCore import QThread
 
 logging.basicConfig(level=logging.WARNING)
 
-if os.environ.get("XDG_CURRENT_DESKTOP", False) == "GNOME":
-    os.environ["QT_QPA_PLATFORMTHEME"] = "gnome"
-    os.environ["QT_STYLE_OVERRIDE"] = "Adwaita-Dark"
-
 MESSAGE = ""
 
 
@@ -260,16 +256,18 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         Sends the close command to winkeyer
         """
-        command = b"\x00\x03"
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = b"\x00\x03"
+            self.port.write(command)
 
     def setspeed(self, speed):
         """
         Sets winkeyer speed. I believe valid speeds are from 5 to brainmelt
         """
-        command = chr(2) + chr(int(speed))
-        self.port.write(command.encode())
-        self.spinBox_speed.setValue(int(speed))
+        if hasattr(self.port, "write"):
+            command = chr(2) + chr(int(speed))
+            self.port.write(command.encode())
+            self.spinBox_speed.setValue(int(speed))
 
     def potspeed(self, speed):
         """
@@ -289,85 +287,97 @@ class WinKeyer(QtWidgets.QMainWindow):
         Basically tells the device 'Hey, well be expecting you to
         transform letters into boop-ity boop stuff.'
         """
-        command = b"\x0e\x44"
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = b"\x0e\x44"
+            self.port.write(command)
 
     def sendblended(self, msg):
         """
         a way to glue togetther two characters to send a prosign.
         """
-        command = b"\x1b" + msg.upper().encode()
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = b"\x1b" + msg.upper().encode()
+            self.port.write(command)
 
     def send(self, msg):
         """
         Basic string in, Morse out of the device.
         """
-        command = msg.upper().encode()
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = msg.upper().encode()
+            self.port.write(command)
 
     def send_backspace(self):
         """
         Erases a character from the end of the winkeyer buffer if it has not been sent already.
         """
-        command = b"\x08"
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = b"\x08"
+            self.port.write(command)
 
     def tuneon(self):
         """
         Keydown and hold it.
         """
-        command = b"\x0b\x01"
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = b"\x0b\x01"
+            self.port.write(command)
 
     def tuneoff(self):
         """
         Stop the keydown
         """
-        command = b"\x0b\x00"
-        self.port.write(command)
+        if hasattr(self.port, "write"):
+            command = b"\x0b\x00"
+            self.port.write(command)
 
     def sendmsg1(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        local_message = self.msg1.text()
-        self.port.write(local_message.upper().encode())
+        if hasattr(self.port, "write"):
+            local_message = self.msg1.text()
+            self.port.write(local_message.upper().encode())
 
     def sendmsg2(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        local_message = self.msg2.text()
-        self.port.write(local_message.upper().encode())
+        if hasattr(self.port, "write"):
+            local_message = self.msg2.text()
+            self.port.write(local_message.upper().encode())
 
     def sendmsg3(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        local_message = self.msg3.text()
-        self.port.write(local_message.upper().encode())
+        if hasattr(self.port, "write"):
+            local_message = self.msg3.text()
+            self.port.write(local_message.upper().encode())
 
     def sendmsg4(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        local_message = self.msg4.text()
-        self.port.write(local_message.upper().encode())
+        if hasattr(self.port, "write"):
+            local_message = self.msg4.text()
+            self.port.write(local_message.upper().encode())
 
     def sendmsg5(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        local_message = self.msg5.text()
-        self.port.write(local_message.upper().encode())
+        if hasattr(self.port, "write"):
+            local_message = self.msg5.text()
+            self.port.write(local_message.upper().encode())
 
     def sendmsg6(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
         """
-        local_message = self.msg6.text()
-        self.port.write(local_message.upper().encode())
+        if hasattr(self.port, "write"):
+            local_message = self.msg6.text()
+            self.port.write(local_message.upper().encode())
 
     def handle_text_change(self):
         """
@@ -413,12 +423,12 @@ class WinKeyer(QtWidgets.QMainWindow):
         global MESSAGE
         sss = MESSAGE
         MESSAGE = ""
-        if sss:
+        if sss and hasattr(self.port, "write"):
             self.port.write(sss.upper().encode())
 
 
 app = QtWidgets.QApplication(sys.argv)
-app.setStyle("Fusion")
+app.setStyle("Adwaita-Dark")
 PATH = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
 families = load_fonts_from_dir(PATH)
 logging.info(families)
