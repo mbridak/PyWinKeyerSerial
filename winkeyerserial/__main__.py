@@ -74,6 +74,9 @@ class RPCThread(QThread):
         with SimpleXMLRPCServer(("0.0.0.0", 8000), allow_none=True) as self.server:
             self.server.register_function(k1elsendstring)
             self.server.register_function(setspeed)
+            self.server.register_function(sendblended)
+            self.server.register_function(tuneon)
+            self.server.register_function(tuneoff)
             self.server.register_introspection_functions()
             self.server.serve_forever()
 
@@ -293,7 +296,7 @@ class WinKeyer(QtWidgets.QMainWindow):
 
     def sendblended(self, msg):
         """
-        a way to glue togetther two characters to send a prosign.
+        a way to glue together two characters to send a prosign.
         """
         if hasattr(self.port, "write"):
             command = b"\x1b" + msg.upper().encode()
@@ -445,6 +448,21 @@ timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 def setspeed(speed) -> None:
     """doc"""
     keyer.setspeed(speed)
+
+
+def tuneon() -> None:
+    """doc"""
+    keyer.tuneon()
+
+
+def tuneoff() -> None:
+    """doc"""
+    keyer.tuneoff()
+
+
+def sendblended(msg) -> None:
+    """doc"""
+    keyer.sendblended(msg)
 
 
 def main():
