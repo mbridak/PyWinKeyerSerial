@@ -6,6 +6,16 @@
 
 Talk to the K1EL WinKeyerSerial, WinKeyerUSB and WKMini.
 
+It provides an API to control the WinKeyer. It listens for XMLRPC requests on port 8000.
+
+The XMLRPC server exposes the following methods:
+
+- k1elsendstring
+- setspeed
+- sendblended
+- tuneon
+- tuneoff
+
 Have the Winkeyer device plugged in before starting this program.
 
 On first run the program writes a file `.pywinkeyer.json` to the root of your home directory.
