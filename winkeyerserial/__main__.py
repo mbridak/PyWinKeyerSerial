@@ -93,7 +93,7 @@ class RPCWidget(QWidget):
 def k1elsendstring(sss):
     """Doc String"""
     global MESSAGE
-    MESSAGE = f"{sss} "
+    MESSAGE = f"{sss}"
 
 
 def load_fonts_from_dir(directory):
@@ -137,6 +137,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
+        self.spinBox_speed.setValue(20)
         self.timer2 = QTimer()
         self.timer2.timeout.connect(self.getwaiting)
         for serialport in comports():
