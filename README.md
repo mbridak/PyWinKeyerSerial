@@ -1,6 +1,6 @@
 # winkeyerserial
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)  [![Python: 3.9+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)  [![Made With:PyQt5](https://img.shields.io/badge/Made%20with-PyQt5-red)](https://pypi.org/project/PyQt5/)![PyPI - Downloads](https://img.shields.io/pypi/dm/winkeyerserial)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)  [![Python: 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)  [![Made With:PyQt5](https://img.shields.io/badge/Made%20with-PyQt6-red)](https://pypi.org/project/PyQt5/)![PyPI - Downloads](https://img.shields.io/pypi/dm/winkeyerserial)
 
 ![logo](https://github.com/mbridak/PyWinKeyerSerial/raw/main/winkeyerserial/k6gte.winkeyerserial.svg)
 
@@ -15,6 +15,7 @@ The XMLRPC server exposes the following methods:
 - sendblended
 - tuneon
 - tuneoff
+- clearbuffer
 
 Have the Winkeyer device plugged in before starting this program.
 
@@ -45,6 +46,7 @@ pip uninstall winkeyerserial
 
 ## What's new
 
+- [25-4-11] Added xmlrpc function to clear sending buffer.
 - [24-1-23] Removed trailing space in k1elsend()
 - [23-5-11] Added xmlrpc function to set speed.
 - [23-2-17] Added serial device descriptions (hover tooltip) to the detected serial devices in the dropdown.
