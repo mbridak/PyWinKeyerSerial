@@ -4,15 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winkeyerserial" 
-version = "24.1.23"
+version = "25.4.11"
 description = "Talk to K1EL winkeyer"
+license = { text = "GPL-3.0-or-later" }
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
   { name="Michael Bridak", email="michael.bridak@gmail.com" },
 ]
 dependencies = [
-    "PyQt5",
+    "PyQt6",
     "pySerial",
 ]
 classifiers = [

@@ -39,14 +39,14 @@ import serial
 from serial.tools.list_ports import comports
 
 # from PyQt5.QtSerialPort import QSerialPort
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import QDir
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFontDatabase
-from PyQt5 import uic
-from PyQt5.QtCore import QTimer
-from PyQt5.QtCore import QThread
+from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtCore import QDir
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QFontDatabase
+from PyQt6 import uic
+from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QThread
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -77,6 +77,7 @@ class RPCThread(QThread):
             self.server.register_function(sendblended)
             self.server.register_function(tuneon)
             self.server.register_function(tuneoff)
+            self.server.register_function(clearbuffer)
             self.server.register_introspection_functions()
             self.server.serve_forever()
 
@@ -143,9 +144,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         for serialport in comports():
             self.comboBox_device.addItem(serialport.device)
             index = self.comboBox_device.findText(serialport.device)
-            self.comboBox_device.setItemData(
-                index, serialport.description, Qt.ToolTipRole
-            )
+            self.comboBox_device.setItemData(index, serialport.description)
             self.device = serialport.device
             self.settings_dict["device"] = self.device
         self.comboBox_device.currentIndexChanged.connect(self.change_serial)
@@ -335,6 +334,14 @@ class WinKeyer(QtWidgets.QMainWindow):
             command = b"\x0b\x00"
             self.port.write(command)
 
+    def clearbuffer(self):
+        """
+        Stop the keydown
+        """
+        if hasattr(self.port, "write"):
+            command = b"\x0a"
+            self.port.write(command)
+
     def sendmsg1(self):
         """
         This and the following just pull text from the fields next to the button and sends it.
@@ -459,6 +466,11 @@ def tuneon() -> None:
 def tuneoff() -> None:
     """doc"""
     keyer.tuneoff()
+
+
+def clearbuffer() -> None:
+    """doc"""
+    keyer.clearbuffer()
 
 
 def sendblended(msg) -> None:
