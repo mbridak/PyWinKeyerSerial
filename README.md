@@ -46,6 +46,7 @@ pip uninstall winkeyerserial
 
 ## What's new
 
+- [25-5-1] Add serial device symlinks, removed use of depricated package pkgutil.
 - [25-4-11] Added xmlrpc function to clear sending buffer.
 - [24-1-23] Removed trailing space in k1elsend()
 - [23-5-11] Added xmlrpc function to set speed.
