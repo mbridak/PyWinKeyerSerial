@@ -29,7 +29,8 @@ import sys
 import os
 import json
 import time
-import pkgutil
+
+from pathlib import Path
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import logging
@@ -38,7 +39,6 @@ import logging
 import serial
 from serial.tools.list_ports import comports
 
-# from PyQt5.QtSerialPort import QSerialPort
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QDir
@@ -124,10 +124,12 @@ class WinKeyer(QtWidgets.QMainWindow):
         queries for existing serial ports.
         loads in saved defaults.
         """
-        self.working_path = os.path.dirname(
-            pkgutil.get_loader("winkeyerserial").get_filename()
-        )
-        data_path = self.working_path + "/main.ui"
+        self.working_path = Path(os.path.dirname(os.path.abspath(__file__)))
+
+        # os.path.dirname(
+        #     pkgutil.get_loader("winkeyerserial").get_filename()
+        # )
+        data_path = self.working_path / "main.ui"
         super().__init__(*args, **kwargs)
         uic.loadUi(data_path, self)
         self.sendmsg1_button.clicked.connect(self.sendmsg1)
@@ -141,7 +143,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.spinBox_speed.setValue(20)
         self.timer2 = QTimer()
         self.timer2.timeout.connect(self.getwaiting)
-        for serialport in comports():
+        for serialport in comports(include_links=True):
             self.comboBox_device.addItem(serialport.device)
             index = self.comboBox_device.findText(serialport.device)
             self.comboBox_device.setItemData(index, serialport.description)
@@ -440,7 +442,8 @@ class WinKeyer(QtWidgets.QMainWindow):
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle("Adwaita-Dark")
-PATH = os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
+PATH = os.path.dirname(os.path.abspath(__file__))
+# os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
 families = load_fonts_from_dir(PATH)
 logging.info(families)
 keyer = WinKeyer()
