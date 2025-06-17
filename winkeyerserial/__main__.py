@@ -94,7 +94,7 @@ class RPCWidget(QWidget):
 def k1elsendstring(sss):
     """Doc String"""
     global MESSAGE
-    MESSAGE = f"{sss}"
+    MESSAGE += f"{sss}"
 
 
 def load_fonts_from_dir(directory):
