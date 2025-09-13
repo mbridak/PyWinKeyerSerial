@@ -23,6 +23,27 @@ This is where I realized that not all K1EL keyers have a speedpot on them....
 You really should have gotten the one with the speedpot.....
 """
 
+# >>> a=12
+# >>> bin(a)
+# '0b1100'
+# >>> f"{a:b}"
+# '1100'
+# >>> f"{a:08b}"
+# '00001100'
+# >>> c = '00001100'
+# >>> c
+# '00001100'
+# >>> int(c,2)
+# 12
+
+# disable_paddle_watchdog
+# paddle_echo_back
+# key_mode 00=B 01=A 10=U 11=bug
+# paddle_swap
+# serial_echoback
+# autospace
+# ct_spacing
+
 # pylint: disable=no-name-in-module, c-extension-no-member, global-statement, bare-except
 
 import sys
@@ -47,6 +68,8 @@ from PyQt6.QtGui import QFontDatabase
 from PyQt6 import uic
 from PyQt6.QtCore import QTimer
 from PyQt6.QtCore import QThread
+
+from settings import Settings
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -126,9 +149,6 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         self.working_path = Path(os.path.dirname(os.path.abspath(__file__)))
 
-        # os.path.dirname(
-        #     pkgutil.get_loader("winkeyerserial").get_filename()
-        # )
         data_path = self.working_path / "main.ui"
         super().__init__(*args, **kwargs)
         uic.loadUi(data_path, self)
@@ -138,6 +158,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.sendmsg4_button.clicked.connect(self.sendmsg4)
         self.sendmsg5_button.clicked.connect(self.sendmsg5)
         self.sendmsg6_button.clicked.connect(self.sendmsg6)
+        self.settings_gear.clicked.connect(self.edit_configuration_settings)
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
         self.spinBox_speed.setValue(20)
@@ -438,6 +459,44 @@ class WinKeyer(QtWidgets.QMainWindow):
         MESSAGE = ""
         if sss and hasattr(self.port, "write"):
             self.port.write(sss.upper().encode())
+
+    def edit_configuration_settings(self) -> None:
+        """
+        Configuration Settings was clicked
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+        data_path = self.working_path / "settings.ui"
+        self.configuration_dialog = Settings(data_path, self.settings_dict)
+        # if self.current_palette:
+        #     self.configuration_dialog.setPalette(self.current_palette)
+        # self.configuration_dialog.usehamdb_radioButton.hide()
+        self.configuration_dialog.show()
+        self.configuration_dialog.accepted.connect(self.edit_configuration_return)
+
+    def edit_configuration_return(self) -> None:
+        """
+        Returns here when configuration dialog closed with okay.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+        """
+
+        self.configuration_dialog.save_changes()
+        # self.write_preference()
+        # logger.debug("%s", f"{self.pref}")
+        # self.readpreferences()
 
 
 app = QtWidgets.QApplication(sys.argv)
