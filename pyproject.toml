@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "winkeyerserial" 
-version = "25.6.17"
+version = "25.9.13"
 description = "Talk to K1EL winkeyer"
 license = { text = "GPL-3.0-or-later" }
 readme = "README.md"
