@@ -24,7 +24,7 @@ class Settings(QtWidgets.QDialog):
             "10": "Ultimatic",
             "11": "Bug Mode",
         }
-        mode_register = self.preference.get("mode_register", "00000000")
+        mode_register = self.preference.get("mode_register", "11001110")
         self.disable_paddle_watchdog.setChecked(bool(mode_register[0] == "1"))
         self.paddle_echo_back.setChecked(bool(mode_register[1] == "1"))
         themode = x.get(f"{mode_register[2]}{mode_register[3]}", "Unknown")
