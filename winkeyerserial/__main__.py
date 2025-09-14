@@ -228,6 +228,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.settings_dict["6"] = self.msg6.text()
         with open(home + "/.pywinkeyer.json", "wt", encoding="utf-8") as file_handle:
             file_handle.write(json.dumps(self.settings_dict))
+        self.setmode()
 
     def host_init(self):
         """
@@ -313,8 +314,11 @@ class WinKeyer(QtWidgets.QMainWindow):
         Basically tells the device 'Hey, well be expecting you to
         transform letters into boop-ity boop stuff.'
         """
+        bin_register = self.settings_dict.get("mode_register", "11001110")
+        int_register = int(bin_register, 2)
+
         if hasattr(self.port, "write"):
-            command = b"\x0e\x44"
+            command = b"\x0e" + int_register.to_bytes()
             self.port.write(command)
 
     def sendblended(self, msg):
@@ -474,9 +478,6 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         data_path = self.working_path / "settings.ui"
         self.configuration_dialog = Settings(data_path, self.settings_dict)
-        # if self.current_palette:
-        #     self.configuration_dialog.setPalette(self.current_palette)
-        # self.configuration_dialog.usehamdb_radioButton.hide()
         self.configuration_dialog.show()
         self.configuration_dialog.accepted.connect(self.edit_configuration_return)
 
@@ -494,15 +495,12 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
 
         self.configuration_dialog.save_changes()
-        # self.write_preference()
-        # logger.debug("%s", f"{self.pref}")
-        # self.readpreferences()
+        self.savestuff()
 
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle("Adwaita-Dark")
 PATH = os.path.dirname(os.path.abspath(__file__))
-# os.path.dirname(pkgutil.get_loader("winkeyerserial").get_filename())
 families = load_fonts_from_dir(PATH)
 logging.info(families)
 keyer = WinKeyer()
