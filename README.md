@@ -46,6 +46,8 @@ pip uninstall winkeyerserial
 
 ## What's new
 
+- [26-5-9] Merge PR TnxQSO-Admin, Send host close command on application exit
+  - Merge PR TnxQSO-Admin, Send POTSET on host open to calibrate speed pot decoding
 - [26-4-21] Merged PR TnxQSO, allowing editable device in the dropdown.
 - [25-5-1] Add serial device symlinks, removed use of depricated package pkgutil.
 - [25-4-11] Added xmlrpc function to clear sending buffer.
