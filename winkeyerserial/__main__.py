@@ -509,6 +509,12 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.configuration_dialog.save_changes()
         self.savestuff()
 
+    def closeEvent(self, a0):
+        """Send host close command to WinKeyer before exiting."""
+        self.host_close()
+        if a0 is not None:
+            a0.accept()
+
 
 app = QtWidgets.QApplication(sys.argv)
 app.setStyle("Adwaita-Dark")
@@ -521,6 +527,14 @@ keyer.host_init()
 if keyer.port:
     keyer.setmode()
 rpcwidget = RPCWidget()
+
+import signal
+
+def handle_sigint(_signum, _frame):
+    keyer.host_close()
+    app.quit()
+
+signal.signal(signal.SIGINT, handle_sigint)
 timer = QTimer()
 timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 
