@@ -288,6 +288,13 @@ class WinKeyer(QtWidgets.QMainWindow):
                 f"{self.device} is open but WinKeyer is not responding"
             )
         self.timer2.start(100)
+
+        # Send POTSET to configure speed pot range: min=5 WPM, range=50 WPM (5-55 WPM).
+        # Without this, the keyer uses its own default MIN_WPM which may differ from
+        # what this host assumes when decoding pot speed bytes (raw - 123 = raw - 0x80 + 5).
+        command = b"\x05\x05\x32\x00"
+        self.port.write(command)
+
         command = b"\x07"  # have the winkeyer return the pot speed setting
         self.port.write(command)
 
