@@ -1,6 +1,7 @@
 # winkeyerserial
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)  [![Python: 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)  [![Made With:PyQt5](https://img.shields.io/badge/Made%20with-PyQt6-red)](https://pypi.org/project/PyQt5/)![PyPI - Downloads](https://img.shields.io/pypi/dm/winkeyerserial)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)  [![Python: 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)  [![Made With:PyQt6](https://img.shields.io/badge/Made%20with-PyQt6-red)](https://pypi.org/project/PyQt6/) [![PyPI Downloads](https://static.pepy.tech/personalized-badge/winkeyerserial?period=monthly&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=Monthly%20Downloads)](https://pepy.tech/projects/winkeyerserial)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/winkeyerserial?period=total&units=INTERNATIONAL_SYSTEM&left_color=GREY&right_color=GREEN&left_text=Total%20Downloads)](https://pepy.tech/projects/winkeyerserial)
 
 ![logo](https://github.com/mbridak/PyWinKeyerSerial/raw/main/winkeyerserial/k6gte.winkeyerserial.svg)
 
