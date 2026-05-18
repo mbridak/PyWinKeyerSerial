@@ -79,6 +79,8 @@ logging.basicConfig(level=logging.WARNING)
 
 MESSAGE = ""
 
+HEARTBEAT_INTERVAL_S = 60
+
 
 class RequestHandler(SimpleXMLRPCRequestHandler):
     """Doc String"""
@@ -166,6 +168,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
         self.spinBox_speed.setValue(20)
+        self.last_tx_time = 0.0
         self.timer2 = QTimer()
         self.timer2.timeout.connect(self.getwaiting)
         for serialport in comports(include_links=True):
@@ -279,7 +282,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.host_close()
         time.sleep(1)  # wait for the keyer to reset.
         command = b"\x00\x02"
-        self.port.write(command)
+        self._port_write(command)
         time.sleep(0.5)
         self.version = self.port.read(255)
         if self.version == b"":  # No version... Maybe the wrong serial port was chosen.
@@ -293,10 +296,10 @@ class WinKeyer(QtWidgets.QMainWindow):
         # Without this, the keyer uses its own default MIN_WPM which may differ from
         # what this host assumes when decoding pot speed bytes (raw - 123 = raw - 0x80 + 5).
         command = b"\x05\x05\x32\x00"
-        self.port.write(command)
+        self._port_write(command)
 
         command = b"\x07"  # have the winkeyer return the pot speed setting
-        self.port.write(command)
+        self._port_write(command)
 
     def host_close(self):
         """
@@ -304,7 +307,11 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = b"\x00\x03"
-            self.port.write(command)
+            self._port_write(command)
+
+    def _port_write(self, data):
+        self.port.write(data)
+        self.last_tx_time = time.time()
 
     def setspeed(self, speed):
         """
@@ -312,7 +319,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = chr(2) + chr(int(speed))
-            self.port.write(command.encode())
+            self._port_write(command.encode())
             self.spinBox_speed.setValue(int(speed))
 
     def potspeed(self, speed):
@@ -338,7 +345,7 @@ class WinKeyer(QtWidgets.QMainWindow):
 
         if hasattr(self.port, "write"):
             command = b"\x0e" + int_register.to_bytes()
-            self.port.write(command)
+            self._port_write(command)
 
     def sendblended(self, msg):
         """
@@ -346,7 +353,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = b"\x1b" + msg.upper().encode()
-            self.port.write(command)
+            self._port_write(command)
 
     def send(self, msg):
         """
@@ -354,7 +361,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = msg.upper().encode()
-            self.port.write(command)
+            self._port_write(command)
 
     def send_backspace(self):
         """
@@ -362,7 +369,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = b"\x08"
-            self.port.write(command)
+            self._port_write(command)
 
     def tuneon(self):
         """
@@ -370,7 +377,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = b"\x0b\x01"
-            self.port.write(command)
+            self._port_write(command)
 
     def tuneoff(self):
         """
@@ -378,7 +385,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = b"\x0b\x00"
-            self.port.write(command)
+            self._port_write(command)
 
     def clearbuffer(self):
         """
@@ -386,7 +393,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             command = b"\x0a"
-            self.port.write(command)
+            self._port_write(command)
 
     def sendmsg1(self):
         """
@@ -394,7 +401,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             local_message = self.msg1.text()
-            self.port.write(local_message.upper().encode())
+            self._port_write(local_message.upper().encode())
 
     def sendmsg2(self):
         """
@@ -402,7 +409,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             local_message = self.msg2.text()
-            self.port.write(local_message.upper().encode())
+            self._port_write(local_message.upper().encode())
 
     def sendmsg3(self):
         """
@@ -410,7 +417,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             local_message = self.msg3.text()
-            self.port.write(local_message.upper().encode())
+            self._port_write(local_message.upper().encode())
 
     def sendmsg4(self):
         """
@@ -418,7 +425,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             local_message = self.msg4.text()
-            self.port.write(local_message.upper().encode())
+            self._port_write(local_message.upper().encode())
 
     def sendmsg5(self):
         """
@@ -426,7 +433,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             local_message = self.msg5.text()
-            self.port.write(local_message.upper().encode())
+            self._port_write(local_message.upper().encode())
 
     def sendmsg6(self):
         """
@@ -434,7 +441,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         """
         if hasattr(self.port, "write"):
             local_message = self.msg6.text()
-            self.port.write(local_message.upper().encode())
+            self._port_write(local_message.upper().encode())
 
     def handle_text_change(self):
         """
@@ -458,6 +465,9 @@ class WinKeyer(QtWidgets.QMainWindow):
         It could also be an echo of the last character it has sent or is sending.
         """
         try:
+            if time.time() - self.last_tx_time >= HEARTBEAT_INTERVAL_S:
+                if hasattr(self.port, "write") and self.port.is_open:
+                    self._port_write(b"\x15")
             if self.port.in_waiting:
                 byte = self.port.read(1)
                 if (byte[0] & b"\xc0"[0]) == b"\xc0"[0]:  # Status Change
@@ -481,7 +491,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         sss = MESSAGE
         MESSAGE = ""
         if sss and hasattr(self.port, "write"):
-            self.port.write(sss.upper().encode())
+            self._port_write(sss.upper().encode())
 
     def edit_configuration_settings(self) -> None:
         """
