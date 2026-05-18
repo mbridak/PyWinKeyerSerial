@@ -47,6 +47,7 @@ pip uninstall winkeyerserial
 
 ## What's new
 
+- [26-5-18] Merge PR TnxQSO-Admin, Adding a periodic keep alive packet.
 - [26-5-9] Merge PR TnxQSO-Admin, Send host close command on application exit
   - Merge PR TnxQSO-Admin, Send POTSET on host open to calibrate speed pot decoding
 - [26-4-21] Merged PR TnxQSO, allowing editable device in the dropdown.
