@@ -168,6 +168,7 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
         self.spinBox_speed.setValue(20)
+        self._shutting_down = False
         self.last_tx_time = 0.0
         self.timer2 = QTimer()
         self.timer2.timeout.connect(self.getwaiting)
@@ -464,6 +465,8 @@ class WinKeyer(QtWidgets.QMainWindow):
         Could be the user has twisted that turney bit thingy with the knob on it.
         It could also be an echo of the last character it has sent or is sending.
         """
+        if self._shutting_down:
+            return
         try:
             if time.time() - self.last_tx_time >= HEARTBEAT_INTERVAL_S:
                 if hasattr(self.port, "write") and self.port.is_open:
@@ -479,7 +482,8 @@ class WinKeyer(QtWidgets.QMainWindow):
                         # print(byte.decode(), end="", flush=True)
                         self.outputbox.insertPlainText(f"{byte.decode()}")
         except:
-            self.host_init()  # Some one may have unplugged the keyer.
+            if not self._shutting_down:
+                self.host_init()  # Some one may have unplugged the keyer.
 
     def checkmessage(self):
         """
@@ -526,9 +530,26 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.configuration_dialog.save_changes()
         self.savestuff()
 
+    def _shutdown(self):
+        """Stop serial I/O and close the port, then quit the application."""
+        if self._shutting_down:
+            return
+        self._shutting_down = True
+        self.timer2.stop()
+        try:
+            self.host_close()
+        except Exception:
+            pass
+        try:
+            if self.port and hasattr(self.port, "close"):
+                self.port.close()
+        except Exception:
+            pass
+        app.quit()
+
     def closeEvent(self, a0):
         """Send host close command to WinKeyer before exiting."""
-        self.host_close()
+        self._shutdown()
         if a0 is not None:
             a0.accept()
 
@@ -548,10 +569,10 @@ rpcwidget = RPCWidget()
 import signal
 
 def handle_sigint(_signum, _frame):
-    keyer.host_close()
-    app.quit()
+    keyer._shutdown()
 
 signal.signal(signal.SIGINT, handle_sigint)
+signal.signal(signal.SIGTERM, handle_sigint)
 timer = QTimer()
 timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 
