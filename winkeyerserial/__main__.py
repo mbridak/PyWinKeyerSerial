@@ -94,11 +94,21 @@ class RPCThread(QThread):
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
         self.server = None
+        self._stop_requested = False
+
+    def stop(self):
+        """Signal the server loop to exit and return; safe to call before the server starts."""
+        self._stop_requested = True
+        if self.server is not None:
+            # serve_forever() polls every 0.5 s, so this returns within that window.
+            self.server.shutdown()
 
     def run(self):
         """Doc String"""
         # sleep a little bit to make sure QApplication is running.
         self.sleep(1)
+        if self._stop_requested:
+            return
         print("--- starting server…")
         with SimpleXMLRPCServer(("0.0.0.0", 8000), allow_none=True) as self.server:
             self.server.register_function(k1elsendstring)
@@ -168,6 +178,8 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.inputbox.textChanged.connect(self.handle_text_change)
         self.spinBox_speed.valueChanged.connect(self.spinboxspeed)
         self.spinBox_speed.setValue(20)
+        self._shutting_down = False
+        self._write_timeout_logged = False
         self.last_tx_time = 0.0
         self.timer2 = QTimer()
         self.timer2.timeout.connect(self.getwaiting)
@@ -263,6 +275,7 @@ class WinKeyer(QtWidgets.QMainWindow):
             self.port.dsrdtr = True
             self.port.rtscts = False
             self.port.timeout = 0
+            self.port.write_timeout = 1  # prevent writes from blocking forever if the device stops responding
             self.port.open()
             if not self.port.is_open:
                 self.outputbox.insertPlainText(
@@ -310,7 +323,18 @@ class WinKeyer(QtWidgets.QMainWindow):
             self._port_write(command)
 
     def _port_write(self, data):
-        self.port.write(data)
+        try:
+            self.port.write(data)
+        except serial.SerialTimeoutException:
+            # A timed-out write is expected when the device is gone (e.g. during shutdown).
+            # Log only once per failure episode to avoid flooding the log.
+            if not self._write_timeout_logged:
+                logging.warning("_port_write: write timeout, device may be disconnected")
+                self._write_timeout_logged = True
+            return
+        if self._write_timeout_logged:
+            logging.info("_port_write: device is responding again")
+            self._write_timeout_logged = False
         self.last_tx_time = time.time()
 
     def setspeed(self, speed):
@@ -464,6 +488,8 @@ class WinKeyer(QtWidgets.QMainWindow):
         Could be the user has twisted that turney bit thingy with the knob on it.
         It could also be an echo of the last character it has sent or is sending.
         """
+        if self._shutting_down:
+            return
         try:
             if time.time() - self.last_tx_time >= HEARTBEAT_INTERVAL_S:
                 if hasattr(self.port, "write") and self.port.is_open:
@@ -479,7 +505,8 @@ class WinKeyer(QtWidgets.QMainWindow):
                         # print(byte.decode(), end="", flush=True)
                         self.outputbox.insertPlainText(f"{byte.decode()}")
         except:
-            self.host_init()  # Some one may have unplugged the keyer.
+            if not self._shutting_down:
+                self.host_init()  # Some one may have unplugged the keyer.
 
     def checkmessage(self):
         """
@@ -526,9 +553,32 @@ class WinKeyer(QtWidgets.QMainWindow):
         self.configuration_dialog.save_changes()
         self.savestuff()
 
+    def _shutdown(self):
+        """Stop serial I/O and close the port, then quit the application."""
+        if self._shutting_down:
+            return
+        self._shutting_down = True
+        self.timer2.stop()
+        try:
+            self.host_close()
+        except Exception:
+            pass
+        try:
+            if self.port and hasattr(self.port, "close"):
+                self.port.close()
+        except Exception:
+            pass
+        try:
+            # rpcwidget may not exist if shutdown fires before module-level setup completes.
+            rpcwidget.thread.stop()
+            rpcwidget.thread.wait(1000)  # wait at most 1 second for the RPC thread to exit
+        except Exception:
+            pass
+        app.quit()
+
     def closeEvent(self, a0):
         """Send host close command to WinKeyer before exiting."""
-        self.host_close()
+        self._shutdown()
         if a0 is not None:
             a0.accept()
 
@@ -540,18 +590,22 @@ families = load_fonts_from_dir(PATH)
 logging.info(families)
 keyer = WinKeyer()
 keyer.show()
+
+import signal
+
+
+def handle_sigint(_signum, _frame):
+    keyer._shutdown()
+
+
+# Register before host_init so Ctrl+C during startup is handled cleanly.
+signal.signal(signal.SIGINT, handle_sigint)
+signal.signal(signal.SIGTERM, handle_sigint)
+
 keyer.host_init()
 if keyer.port:
     keyer.setmode()
 rpcwidget = RPCWidget()
-
-import signal
-
-def handle_sigint(_signum, _frame):
-    keyer.host_close()
-    app.quit()
-
-signal.signal(signal.SIGINT, handle_sigint)
 timer = QTimer()
 timer.timeout.connect(keyer.checkmessage)  # Do not do this.
 
