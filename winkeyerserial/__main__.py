@@ -264,6 +264,7 @@ class WinKeyer(QtWidgets.QMainWindow):
             self.port.dsrdtr = True
             self.port.rtscts = False
             self.port.timeout = 0
+            self.port.write_timeout = 1  # prevent writes from blocking forever if the device stops responding
             self.port.open()
             if not self.port.is_open:
                 self.outputbox.insertPlainText(
@@ -311,7 +312,12 @@ class WinKeyer(QtWidgets.QMainWindow):
             self._port_write(command)
 
     def _port_write(self, data):
-        self.port.write(data)
+        try:
+            self.port.write(data)
+        except serial.SerialTimeoutException:
+            # A timed-out write is expected when the device is gone (e.g. during shutdown).
+            logging.warning("_port_write: write timeout, device may be disconnected")
+            return
         self.last_tx_time = time.time()
 
     def setspeed(self, speed):
